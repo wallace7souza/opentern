@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### New
+- **Brazilian stocks (B3).** Search for a ticker or a company (`PETR4`, `ITSA4`, `Itaúsa`) and pick its B3 listing (`BMFBOVESPA:PETR4`): stocks, units, FIIs, ETFs, BDRs and the odd-lot market, from Yahoo, 15 minutes late. Daily history goes back to 2000, 1-minute bars about a week, 5- to 30-minute bars about 60 days. Dividends and splits show on the chart, prices are in reais with B3's sessions and holidays, and onboarding offers Brazilian Markets. A ticker search misses can be typed as `BMFBOVESPA:TICKER`. Search now ignores accents too.
+
 ## 0.3.8 (2026-11-28)
 
 Hyperliquid's markets, a deeper equity chart in the Strategy Report, Fib levels and drawing templates you choose, the Fed funds rate, indicators on indicators, and strategies that recalculate on order fills.

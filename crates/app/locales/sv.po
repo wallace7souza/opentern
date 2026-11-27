@@ -566,6 +566,9 @@ msgstr "Genomsnittlig vinstaffär"
 msgid "Awesome Oscillator"
 msgstr "Awesome-oscillator"
 
+msgid "B3 prices from Yahoo are 15 minutes behind the exchange."
+msgstr "B3-kurser från Yahoo ligger 15 minuter efter börsen."
+
 msgid "BBPower"
 msgstr ""
 
@@ -702,6 +705,9 @@ msgstr "Boxstorlek"
 
 msgid "Boxing Day"
 msgstr "Annandag jul"
+
+msgid "Brazilian Markets"
+msgstr "Brasilianska marknader"
 
 msgid "Brush"
 msgstr "Pensel"

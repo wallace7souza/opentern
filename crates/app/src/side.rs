@@ -629,6 +629,7 @@ fn corporate_row(ui: &mut Ui, t: &Theme, date: &str, what: &str, amount: &str, u
 fn currency_prefix(sym: &opentern_core::Symbol) -> &'static str {
     match (sym.currency.as_str(), sym.exchange()) {
         ("INR", _) | (_, "NSE" | "BSE") => "₹",
+        ("BRL", _) | (_, opentern_core::b3::EXCHANGE) => "R$",
         ("USD", _) | (_, "NASDAQ" | "NYSE" | "AMEX" | "ARCA") => "$",
         ("EUR", _) => "€",
         ("GBP", _) => "£",

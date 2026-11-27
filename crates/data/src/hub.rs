@@ -806,13 +806,16 @@ pub(crate) static DEMO: std::sync::atomic::AtomicBool = std::sync::atomic::Atomi
 /// How many minutes behind the exchange a symbol's free prices are, when
 /// known: CME's and ICE's futures (our commodities and futures, from Yahoo) reach free
 /// sources at least 10 minutes late. Daily closes are the settlements.
+/// B3's reach Yahoo 15 minutes late.
 pub fn delayed_minutes(sym: &Symbol) -> Option<u32> {
-    (matches!(
-        sym.kind,
-        opentern_core::AssetKind::Commodity | opentern_core::AssetKind::Futures
-    ) && !DEMO.load(std::sync::atomic::Ordering::Relaxed)
-        && yahoo_routed(sym))
-    .then_some(10)
+    if DEMO.load(std::sync::atomic::Ordering::Relaxed) || !yahoo_routed(sym) {
+        return None;
+    }
+    match sym.kind {
+        opentern_core::AssetKind::Commodity | opentern_core::AssetKind::Futures => Some(10),
+        _ if sym.exchange() == opentern_core::b3::EXCHANGE => Some(15),
+        _ => None,
+    }
 }
 
 /// Whether Yahoo serves a symbol (its quotes come from Yahoo's quote API).
@@ -1008,7 +1011,7 @@ fn peek(seq: u64, symbols: Vec<Symbol>, demo: bool, out: &Out) {
 fn exchange_rank(ex: &str) -> u32 {
     match ex {
         "BINANCE" => 0,
-        "NASDAQ" | "NYSE" | "AMEX" | "NSE" => 1,
+        "NASDAQ" | "NYSE" | "AMEX" | "NSE" | opentern_core::b3::EXCHANGE => 1,
         "COINBASE" => 2,
         "BYBIT" => 3,
         "OKX" => 4,
@@ -1272,7 +1275,7 @@ impl Session {
         let stocky = matches!(self.symbol.kind, AssetKind::Stock | AssetKind::Fund)
             && matches!(
                 self.symbol.exchange(),
-                "NASDAQ" | "NYSE" | "AMEX" | "NSE" | "BSE" | "YAHOO"
+                "NASDAQ" | "NYSE" | "AMEX" | "NSE" | "BSE" | "YAHOO" | opentern_core::b3::EXCHANGE
             );
         if !stocky {
             return;
@@ -1697,7 +1700,10 @@ fn rank(s: &Symbol, q: &str) -> Option<u32> {
     {
         t = rest.to_string();
     }
-    let d = s.description.to_uppercase();
+    // "ITAUSA" finds "Itaúsa S.A.", "PETRÓLEO" finds "Petroleo".
+    let d = unaccent(&s.description.to_uppercase());
+    let plain = unaccent(q);
+    let q = plain.as_str();
     if t == q {
         return Some(0);
     }
@@ -1735,6 +1741,22 @@ fn rank(s: &Symbol, q: &str) -> Option<u32> {
         return loose_rank(s, &t, &d, q).or_else(|| typo_rank(&t, &d, q));
     };
     Some(score)
+}
+
+/// Upper-case Latin letters without their accents (Á → A, Ç → C).
+fn unaccent(s: &str) -> String {
+    s.chars()
+        .map(|c| match c {
+            'À' | 'Á' | 'Â' | 'Ã' | 'Ä' | 'Å' => 'A',
+            'Ç' => 'C',
+            'È' | 'É' | 'Ê' | 'Ë' => 'E',
+            'Ì' | 'Í' | 'Î' | 'Ï' => 'I',
+            'Ñ' => 'N',
+            'Ò' | 'Ó' | 'Ô' | 'Õ' | 'Ö' => 'O',
+            'Ù' | 'Ú' | 'Û' | 'Ü' => 'U',
+            c => c,
+        })
+        .collect()
 }
 
 /// A word of `d` (after a space, a dash or a bracket) starts with `q`:
@@ -2032,6 +2054,7 @@ fn search_worker(dir: PathBuf, demo: bool, rx: Receiver<(u64, String)>, out: Out
         known.extend(opentern_core::spot_commodities());
         known.extend(opentern_core::futures());
         known.extend(opentern_core::indices());
+        known.extend(opentern_core::b3::symbols());
         known.extend(crate::overview::listed_stocks());
         if let Some(c) = cache {
             known.extend(c.symbols().unwrap_or_default());
@@ -2067,6 +2090,14 @@ fn search_worker(dir: PathBuf, demo: bool, rx: Receiver<(u64, String)>, out: Out
                 });
                 let found = if !demo && want_ex.is_none() {
                     Yahoo::default().search(&q).ok()
+                } else if !demo && want_ex.as_deref() == Some(opentern_core::b3::EXCHANGE) {
+                    // "BMFBOVESPA:ITSA" searches Yahoo for B3 listings only.
+                    Yahoo::default().search(&q).ok().map(|found| {
+                        found
+                            .into_iter()
+                            .filter(|s| s.exchange() == opentern_core::b3::EXCHANGE)
+                            .collect()
+                    })
                 } else {
                     None
                 };
@@ -2232,6 +2263,15 @@ fn search_worker(dir: PathBuf, demo: bool, rx: Receiver<(u64, String)>, out: Out
                     }),
                 ));
             }
+            // "BMFBOVESPA:BOVA11" as typed: Yahoo's search misses some B3
+            // tickers its charts have (ETFs).
+            if want_ex.as_deref() == Some(opentern_core::b3::EXCHANGE)
+                && q.len() >= 4
+                && q.chars().all(|c| c.is_ascii_alphanumeric())
+                && !hits.iter().any(|(_, h)| h.ticker() == q)
+            {
+                hits.push((0, opentern_core::b3::symbol(&q, "B3", opentern_core::AssetKind::Stock)));
+            }
             // No coin by that name yet: perhaps it listed today.
             let asks: Vec<String> = if !demo && want_ex.as_deref().is_none_or(|e| e == "BINANCE") {
                 coin_lookups(&q, &hits.iter().map(|(_, s)| s).collect::<Vec<_>>())
@@ -2248,7 +2288,8 @@ fn search_worker(dir: PathBuf, demo: bool, rx: Receiver<(u64, String)>, out: Out
             if want_ex.is_none() {
                 with_hyperliquid(&known, &mut hits);
             }
-            let network = !asks.is_empty() || (!demo && want_ex.is_none());
+            let network =
+                !asks.is_empty() || (!demo && want_ex.as_deref().is_none_or(|e| e == opentern_core::b3::EXCHANGE));
             out.send(Event::Search {
                 seq,
                 results: sorted(hits.clone()),
@@ -2540,6 +2581,31 @@ mod tests {
             assert!(rank(&effr, q).is_some_and(|r| r <= 55), "{q}: {:?}", rank(&effr, q));
         }
         assert_eq!(rank(&aapl, "FED FUNDS"), None);
+        // Accents don't matter, either way.
+        let itsa = mk("BMFBOVESPA:ITSA4", "Itaúsa S.A.");
+        assert!(rank(&itsa, "ITAUSA").unwrap() <= 50, "a name prefix");
+        assert!(rank(&itsa, "ITAÚSA").unwrap() <= 50);
+        assert_eq!(rank(&itsa, "ITSA4"), Some(0));
+    }
+
+    #[test]
+    fn b3_symbols_are_known_to_search() {
+        let all = opentern_core::b3::symbols();
+        let find = |q: &str| {
+            let mut hits: Vec<_> = all.iter().filter_map(|s| Some((rank(s, q)?, s.id.as_str()))).collect();
+            hits.sort();
+            hits.first().map(|h| h.1.to_string())
+        };
+        assert_eq!(find("PETR4").as_deref(), Some("BMFBOVESPA:PETR4"));
+        assert_eq!(
+            find("BOVA11").as_deref(),
+            Some("BMFBOVESPA:BOVA11"),
+            "ETFs Yahoo's search misses"
+        );
+        assert_eq!(
+            find("ITAUSA").as_deref().map(|s| s.starts_with("BMFBOVESPA:ITSA")),
+            Some(true)
+        );
     }
 
     #[test]

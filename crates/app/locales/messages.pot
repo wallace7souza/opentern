@@ -566,6 +566,9 @@ msgstr ""
 msgid "Awesome Oscillator"
 msgstr ""
 
+msgid "B3 prices from Yahoo are 15 minutes behind the exchange."
+msgstr ""
+
 msgid "BBPower"
 msgstr ""
 
@@ -701,6 +704,9 @@ msgid "Box size"
 msgstr ""
 
 msgid "Boxing Day"
+msgstr ""
+
+msgid "Brazilian Markets"
 msgstr ""
 
 msgid "Brush"

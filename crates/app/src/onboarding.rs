@@ -42,15 +42,17 @@ pub enum Market {
     Crypto,
     Us,
     India,
+    Brazil,
     Forex,
     Commodities,
 }
 
 impl Market {
-    pub const ALL: [Market; 5] = [
+    pub const ALL: [Market; 6] = [
         Market::Crypto,
         Market::Us,
         Market::India,
+        Market::Brazil,
         Market::Forex,
         Market::Commodities,
     ];
@@ -60,6 +62,7 @@ impl Market {
             Market::Crypto => nt!("Crypto"),
             Market::Us => nt!("US Markets"),
             Market::India => nt!("Indian Markets"),
+            Market::Brazil => nt!("Brazilian Markets"),
             Market::Forex => nt!("Forex"),
             Market::Commodities => nt!("Commodities"),
         }
@@ -70,6 +73,8 @@ impl Market {
             Market::Crypto => ph::CURRENCY_BTC,
             Market::Us => ph::CURRENCY_DOLLAR,
             Market::India => ph::CURRENCY_INR,
+            // Phosphor has no real sign.
+            Market::Brazil => "R$",
             Market::Forex => ph::ARROWS_LEFT_RIGHT,
             Market::Commodities => ph::DROP,
         }
@@ -86,6 +91,7 @@ impl Market {
             min_qty: 0.0,
             timezone: match id.split(':').next() {
                 Some("NSE" | "BSE") => "Asia/Kolkata",
+                Some(opentern_core::b3::EXCHANGE) => opentern_core::b3::TIMEZONE,
                 Some("NASDAQ" | "NYSE" | "AMEX" | "COMEX" | "NYMEX" | "ICEEUR" | "CBOT") => "America/New_York",
                 _ => "UTC",
             }
@@ -141,6 +147,13 @@ impl Market {
             .iter()
             .map(|(t, n)| s(&format!("NSE:{t}"), n, Stock, "INR", 0.05))
             .collect(),
+            Market::Brazil => {
+                let all = opentern_core::b3::symbols();
+                ["PETR4", "VALE3", "ITUB4", "BBAS3", "BBDC4", "B3SA3", "ABEV3"]
+                    .iter()
+                    .filter_map(|t| all.iter().find(|s| s.ticker() == *t).cloned())
+                    .collect()
+            }
             Market::Forex => [
                 ("EURUSD", "Euro / U.S. Dollar", 0.00001),
                 ("GBPUSD", "British Pound / U.S. Dollar", 0.00001),

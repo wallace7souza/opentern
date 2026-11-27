@@ -566,6 +566,9 @@ msgstr "Operación ganadora media"
 msgid "Awesome Oscillator"
 msgstr "Oscilador asombroso"
 
+msgid "B3 prices from Yahoo are 15 minutes behind the exchange."
+msgstr "Los precios de B3 de Yahoo van 15 minutos por detrás de la bolsa."
+
 msgid "BBPower"
 msgstr ""
 
@@ -702,6 +705,9 @@ msgstr "Tamaño de caja"
 
 msgid "Boxing Day"
 msgstr "Boxing Day"
+
+msgid "Brazilian Markets"
+msgstr "Mercados brasileños"
 
 msgid "Brush"
 msgstr "Pincel"

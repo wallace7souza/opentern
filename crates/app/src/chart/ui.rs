@@ -2939,17 +2939,22 @@ fn legend(
                     .on_hover_text(tip);
                 xx += w + 2.0;
             }
-            // Free futures prices run behind the exchange (CME's rule).
+            // Free prices that run behind the exchange (CME's rule; B3 on Yahoo).
             if let Some(min) = opentern_data::hub::delayed_minutes(&chart.symbol) {
                 let g = painter.layout_no_wrap(trf!("Delayed {min} min"), theme::regular(11.0), t.warn);
                 let r = Rect::from_min_size(pos2(xx + 4.0, pos.y + 1.0), g.size() + vec2(10.0, 2.0));
                 painter.rect_filled(r, CornerRadius::same(4), t.warn.gamma_multiply(0.14));
                 painter.galley(r.min + vec2(5.0, 1.0), g, t.warn);
-                ui.interact(r, ui.id().with("delayed"), Sense::hover())
-                    .on_hover_text(tr(
+                let tip = if chart.symbol.exchange() == opentern_core::b3::EXCHANGE {
+                    tr("B3 prices from Yahoo are 15 minutes behind the exchange.")
+                } else {
+                    tr(
                         "Futures prices from free sources are about 10 minutes behind the exchange. \
                      Daily closes are the official settlements.",
-                    ));
+                    )
+                };
+                ui.interact(r, ui.id().with("delayed"), Sense::hover())
+                    .on_hover_text(tip);
                 xx = r.right() + 8.0;
             }
             // A perpetual's funding: the rate, and how long until it's paid.

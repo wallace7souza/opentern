@@ -46,6 +46,7 @@ pub fn ticker(id: &str) -> String {
     match (ex, t) {
         ("NSE", t) => format!("{t}.NS"),
         ("BSE", t) => format!("{t}.BO"),
+        ("BMFBOVESPA", t) => format!("{t}.SA"),
         ("FX", t) => format!("{t}=X"),
         // Commodities: TradingView's continuous contract → Yahoo's front month.
         ("COMEX" | "NYMEX" | "CBOT" | "CME" | "ICEUS" | "ICEEUR", t) if t.ends_with("1!") => match &t[..t.len() - 2] {
@@ -69,6 +70,7 @@ fn id_for(exchange: &str, symbol: &str) -> String {
         "PCX" | "ASE" | "BTS" => format!("AMEX:{symbol}"),
         "NSI" => format!("NSE:{}", base(symbol, ".NS")),
         "BSE" => format!("BSE:{}", base(symbol, ".BO")),
+        "SAO" if symbol.ends_with(".SA") => format!("BMFBOVESPA:{}", base(symbol, ".SA")),
         "CCY" => format!("FX:{}", base(symbol, "=X")),
         // A front-month future we list as a commodity (GC=F → COMEX:GC1!).
         _ if symbol.ends_with("=F")
@@ -522,19 +524,23 @@ impl Yahoo {
                     return None;
                 }
                 let id = id_for(exchange, symbol);
-                let tz = match id.split(':').next() {
-                    Some("NSE" | "BSE") => "Asia/Kolkata",
-                    Some("NASDAQ" | "NYSE" | "AMEX") => "America/New_York",
+                let ex = id.split(':').next().unwrap_or("");
+                let tz = match ex {
+                    "NSE" | "BSE" => "Asia/Kolkata",
+                    "NASDAQ" | "NYSE" | "AMEX" => "America/New_York",
+                    "BMFBOVESPA" => "America/Sao_Paulo",
                     _ => "UTC",
                 };
+                // B3's short names are padded columns ("PETROBRAS   PN      N2").
+                let name = q["longname"].as_str().or(q["shortname"].as_str()).unwrap_or(symbol);
                 Some(Symbol {
-                    description: q["longname"]
-                        .as_str()
-                        .or(q["shortname"].as_str())
-                        .unwrap_or(symbol)
-                        .to_string(),
+                    description: name.split_whitespace().collect::<Vec<_>>().join(" "),
                     kind: kind(qt),
-                    currency: String::new(),
+                    currency: if ex == "BMFBOVESPA" {
+                        "BRL".into()
+                    } else {
+                        String::new()
+                    },
                     tick_size: 0.01,
                     min_qty: 0.0,
                     timezone: tz.into(),
@@ -895,6 +901,11 @@ mod tests {
         assert_eq!(id_for("NMS", "AAPL"), "NASDAQ:AAPL");
         assert_eq!(id_for("CCY", "EURUSD=X"), "FX:EURUSD");
         assert_eq!(id_for("FGI", "X"), "YAHOO:X");
+        // B3: TICKER.SA, and the Ibovespa as ^BVSP.
+        assert_eq!(ticker("BMFBOVESPA:PETR4"), "PETR4.SA");
+        assert_eq!(ticker("BMFBOVESPA:IBOV"), "^BVSP");
+        assert_eq!(id_for("SAO", "ITSA4.SA"), "BMFBOVESPA:ITSA4");
+        assert_eq!(id_for("SAO", "^BVSP"), "BMFBOVESPA:IBOV");
         assert_eq!(ticker("YAHOO:^GSPC"), "^GSPC");
         assert_eq!(ticker("TVC:NI225"), "^N225");
         assert_eq!(ticker("TVC:US10Y"), "^TNX");

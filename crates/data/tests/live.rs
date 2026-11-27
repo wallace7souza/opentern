@@ -65,6 +65,41 @@ fn yahoo_history() {
     open(aapl, "15m", false);
 }
 
+/// B3 through Yahoo: daily history back to 2000, intraday bars, the
+/// Ibovespa, dividends, and Yahoo's search naming B3 listings ours.
+#[test]
+#[ignore]
+fn yahoo_b3() {
+    use opentern_data::provider::Provider;
+    let y = opentern_data::yahoo::Yahoo::default();
+    let tf = |s: &str| opentern_core::Timeframe::parse(s).unwrap();
+    let b3 = opentern_core::b3::symbols();
+    let petr4 = b3.iter().find(|s| s.ticker() == "PETR4").unwrap().clone();
+    let days = y.latest(&petr4, tf("1D"), 0).unwrap();
+    let first = jiff::Timestamp::from_millisecond(days[0].time).unwrap();
+    println!("PETR4 1D: {} bars from {first}", days.len());
+    assert!(days.len() > 5000, "daily bars, not monthly: {}", days.len());
+    let five = y.latest(&petr4, tf("5m"), 0).unwrap();
+    println!("PETR4 5m: {} bars", five.len());
+    assert!(five.len() > 100);
+    let bova = b3.iter().find(|s| s.ticker() == "BOVA11").unwrap().clone();
+    open(bova, "1D", false);
+    let ibov = opentern_core::indices()
+        .into_iter()
+        .find(|s| s.id == "BMFBOVESPA:IBOV")
+        .unwrap();
+    open(ibov, "1D", false);
+    let itsa = b3.iter().find(|s| s.ticker() == "ITSA4").unwrap();
+    let c = y.corporate(itsa).unwrap();
+    println!("ITSA4: {} dividends", c.dividends.len());
+    assert!(!c.dividends.is_empty(), "Itaúsa pays dividends");
+    let found = y.search("itausa").unwrap();
+    println!("search itausa: {:?}", found.iter().map(|s| &s.id).collect::<Vec<_>>());
+    let itsa4 = found.iter().find(|s| s.id == "BMFBOVESPA:ITSA4").expect("ITSA4 found");
+    assert_eq!(itsa4.timezone, "America/Sao_Paulo");
+    assert_eq!(itsa4.currency, "BRL");
+}
+
 /// Weeks start on Monday and months on the 1st, and the current one runs to
 /// the latest day (Yahoo's own end at yesterday, with today as a bar apart).
 #[test]

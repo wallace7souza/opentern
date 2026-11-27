@@ -566,6 +566,9 @@ msgstr "平均勝ちトレード"
 msgid "Awesome Oscillator"
 msgstr "オーサムオシレーター"
 
+msgid "B3 prices from Yahoo are 15 minutes behind the exchange."
+msgstr "Yahoo の B3 の価格は取引所より 15 分遅れています。"
+
 msgid "BBPower"
 msgstr ""
 
@@ -702,6 +705,9 @@ msgstr "ボックスサイズ"
 
 msgid "Boxing Day"
 msgstr "ボクシング・デー"
+
+msgid "Brazilian Markets"
+msgstr "ブラジル市場"
 
 msgid "Brush"
 msgstr "ブラシ"

@@ -306,6 +306,7 @@ pub fn guess_currency(id: &str) -> String {
     let (ex, t) = id.split_once(':').unwrap_or(("", id));
     match ex {
         "NSE" | "BSE" => "INR".into(),
+        opentern_core::b3::EXCHANGE => "BRL".into(),
         "AMEX" | "NASDAQ" | "NYSE" | "ARCA" | "BATS" | "CBOE" | "COMEX" | "NYMEX" | "CBOT" | "CME" => "USD".into(),
         "FX" | "OANDA" if t.replace('_', "").len() == 6 => t.replace('_', "")[3..].to_string(),
         "BINANCE" | "BYBIT" | "OKX" | "COINBASE" | "KRAKEN" | "HYPERLIQUID" => {
@@ -322,6 +323,7 @@ pub fn guess_tz(id: &str) -> String {
     match id.split(':').next() {
         Some("NSE" | "BSE") => "Asia/Kolkata",
         Some("AMEX" | "NASDAQ" | "NYSE") => "America/New_York",
+        Some(opentern_core::b3::EXCHANGE) => opentern_core::b3::TIMEZONE,
         _ => "UTC",
     }
     .to_string()

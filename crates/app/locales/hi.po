@@ -566,6 +566,9 @@ msgstr "औसत लाभ वाला ट्रेड"
 msgid "Awesome Oscillator"
 msgstr "ऑसम ऑसिलेटर"
 
+msgid "B3 prices from Yahoo are 15 minutes behind the exchange."
+msgstr "Yahoo से B3 के भाव एक्सचेंज से 15 मिनट पीछे होते हैं।"
+
 msgid "BBPower"
 msgstr ""
 
@@ -702,6 +705,9 @@ msgstr "बॉक्स आकार"
 
 msgid "Boxing Day"
 msgstr "बॉक्सिंग डे"
+
+msgid "Brazilian Markets"
+msgstr "ब्राज़ीलियाई बाज़ार"
 
 msgid "Brush"
 msgstr "ब्रश"

@@ -566,6 +566,9 @@ msgstr "Ø Gewinntrade"
 msgid "Awesome Oscillator"
 msgstr "Awesome Oscillator"
 
+msgid "B3 prices from Yahoo are 15 minutes behind the exchange."
+msgstr "B3-Kurse von Yahoo liegen 15 Minuten hinter der Börse."
+
 msgid "BBPower"
 msgstr ""
 
@@ -702,6 +705,9 @@ msgstr "Boxgröße"
 
 msgid "Boxing Day"
 msgstr "Boxing Day"
+
+msgid "Brazilian Markets"
+msgstr "Brasilianische Märkte"
 
 msgid "Brush"
 msgstr "Pinsel"

@@ -194,6 +194,7 @@ pub fn starter_watchlist() -> Vec<Symbol> {
         timezone: match id.split(':').next() {
             Some("NSE" | "BSE") => "Asia/Kolkata".into(),
             Some("AMEX" | "NASDAQ" | "NYSE") => "America/New_York".into(),
+            Some(crate::b3::EXCHANGE) => crate::b3::TIMEZONE.into(),
             _ => utc(),
         },
     };

@@ -417,6 +417,7 @@ impl App {
                     .chain(opentern_core::commodities())
                     .chain(opentern_core::spot_commodities())
                     .chain(opentern_core::futures())
+                    .chain(opentern_core::b3::symbols())
                     .find(|s| s.id == id)
                     .unwrap_or_else(|| Symbol {
                         kind: if crypto {
@@ -427,6 +428,7 @@ impl App {
                         description: String::new(),
                         timezone: match id.split(':').next() {
                             Some("NSE" | "BSE") => "Asia/Kolkata".into(),
+                            Some(opentern_core::b3::EXCHANGE) => opentern_core::b3::TIMEZONE.into(),
                             _ if crypto => "UTC".into(),
                             _ => "America/New_York".into(),
                         },

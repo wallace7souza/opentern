@@ -566,6 +566,9 @@ msgstr "Средняя прибыльная сделка"
 msgid "Awesome Oscillator"
 msgstr "Чудесный осциллятор"
 
+msgid "B3 prices from Yahoo are 15 minutes behind the exchange."
+msgstr "Цены B3 из Yahoo отстают от биржи на 15 минут."
+
 msgid "BBPower"
 msgstr ""
 
@@ -702,6 +705,9 @@ msgstr "Размер блока"
 
 msgid "Boxing Day"
 msgstr "День подарков"
+
+msgid "Brazilian Markets"
+msgstr "Рынки Бразилии"
 
 msgid "Brush"
 msgstr "Кисть"

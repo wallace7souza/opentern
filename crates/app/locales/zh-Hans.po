@@ -566,6 +566,9 @@ msgstr "平均盈利交易"
 msgid "Awesome Oscillator"
 msgstr "动量震荡指标 (AO)"
 
+msgid "B3 prices from Yahoo are 15 minutes behind the exchange."
+msgstr "来自 Yahoo 的 B3 价格比交易所晚 15 分钟。"
+
 msgid "BBPower"
 msgstr ""
 
@@ -702,6 +705,9 @@ msgstr "砖块大小"
 
 msgid "Boxing Day"
 msgstr "节礼日"
+
+msgid "Brazilian Markets"
+msgstr "巴西市场"
 
 msgid "Brush"
 msgstr "画笔"
